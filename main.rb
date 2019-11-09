@@ -1,3 +1,17 @@
+class String
+  def colorize(color_code)
+    "\e[#{color_code}m#{self}\e[0m"
+  end
+
+  def red
+    colorize(31)
+  end
+
+  def green
+    colorize(32)
+  end
+end
+
 class Hangman
 
   def initialize
@@ -6,7 +20,7 @@ class Hangman
     @misses = 0
     play_game
   end
-  
+
   def play_game
     new_or_saved
   end
@@ -39,7 +53,7 @@ class Hangman
   def generate_word
     wordlist = File.open("lib/5desk.txt", "r")
     random_num = rand(wordlist.readlines.size)
-    @solution_word = File.readlines(wordlist)[random_num].strip
+    @solution_word = File.readlines(wordlist)[random_num].strip.upcase
     wordlist.close
     puts @solution_word
     (@solution_word.length).times {@guess_array.push("_ ")}
@@ -80,14 +94,27 @@ class Hangman
   def get_guess
     print %Q(
       Enter a guess: )
-    guess = gets.chomp
+    guess = gets.chomp.upcase
     if @solution_array.include?(guess)
       @solution_array.each_with_index do |letter, index|
         @guess_array[index] = guess + " " if letter == guess
       end
+      @letters.map! do |letter| 
+        if letter == guess.upcase
+          letter = letter.green
+        else
+          letter = letter
+        end
+      end
     else
       @misses += 1
-      @letters.delete(guess)
+      @letters.map! do |letter| 
+        if letter == guess.upcase
+          letter = letter.red
+        else
+          letter = letter
+        end
+      end
     end
   end
 
