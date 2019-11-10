@@ -32,6 +32,7 @@ class Hangman
       
       1 = NEW game
       2 = LOAD a SAVED game
+      3 = QUIT
       
       Enter 1 or 2: )
     valid_answer = false
@@ -45,15 +46,23 @@ class Hangman
       elsif @new_or_saved == 2
         valid_answer = true
         load_saved
-      else print %Q(You may only enter 1 or 2.  Try again.)
+      elsif @new_or_saved == 3
+        break
+      else print %Q(You may only enter 1, 2 or 3.  Try again.)
       end
     end
   end    
   
   def generate_word
     wordlist = File.open("lib/5desk.txt", "r")
-    random_num = rand(wordlist.readlines.size)
-    @solution_word = File.readlines(wordlist)[random_num].strip.upcase
+    valid_word = false
+    while valid_word == false
+      random_num = rand(wordlist.readlines.size)
+      @solution_word = File.readlines(wordlist)[random_num].strip.upcase
+      if (5..12).to_a.include?(@solution_word.length)
+        valid_word = true
+      end
+    end
     wordlist.close
     puts @solution_word
     (@solution_word.length).times {@guess_array.push("_ ")}
@@ -74,9 +83,19 @@ class Hangman
   end
 
   def game_sequence
+    if @misses == 6
+      print "You lost! Press [ENTER] to play again or [X] to exit."
+      replay_question
+    end
     while @misses < 6
       scoreboard
       get_guess
+      if @guess_array == @solution_array
+        scoreboard
+        @misses = 6
+        print "You won! Press [ENTER] to play again or [X] to exit."
+        replay_question
+      end
     end
   end
 
@@ -85,7 +104,7 @@ class Hangman
       
       #{@misses} miss\(es\) out of 6 total.
     
-      #{@guess_array.join("")}  #{@letters.join("")}
+      #{@guess_array.join(" ")}  #{@letters.join("")}
     
       )
 
@@ -93,11 +112,33 @@ class Hangman
 
   def get_guess
     print %Q(
-      Enter a guess: )
+      Enter a guess, or type SAVE to save your game: )
     guess = gets.chomp.upcase
+    validate_guess(guess)
+  end
+
+  def validate_guess(guess)
+    case
+      when guess == "SAVE"
+        save_game  
+      when guess.length != 1
+        puts %Q(
+      You may only guess one character at a time.  Try again.
+          )
+        get_guess
+      when !@letters.include?(guess)
+        puts %Q(
+      You can only enter a letter.  Try again.
+          )
+    else
+      process_guess(guess)
+    end
+  end
+
+  def process_guess(guess)
     if @solution_array.include?(guess)
       @solution_array.each_with_index do |letter, index|
-        @guess_array[index] = guess + " " if letter == guess
+        @guess_array[index] = guess if letter == guess
       end
       @letters.map! do |letter| 
         if letter == guess.upcase
@@ -116,6 +157,17 @@ class Hangman
         end
       end
     end
+  end
+
+  def replay_question
+    play_again = gets.chomp.upcase
+    if play_again == ""
+      Hangman.new
+    end
+  end
+
+  def save_game
+    puts self.inspect
   end
 
   def load_saved
