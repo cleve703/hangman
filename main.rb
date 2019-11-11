@@ -1,3 +1,5 @@
+require 'yaml'
+
 class String
   def colorize(color_code)
     "\e[#{color_code}m#{self}\e[0m"
@@ -167,7 +169,11 @@ class Hangman
   end
 
   def save_game
+    time = Time.new
+    default_filename = time.strftime("%Y%m%d%H%m%S")
+    puts "Default filename is #{default_filename}"
     puts self.inspect
+    File.open("#{default_filename}.bin", "wb") {|f| f.write(Marshal.dump(self))}
   end
 
   def load_saved
