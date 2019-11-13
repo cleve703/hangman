@@ -57,15 +57,14 @@ class Hangman
   end
 
   def generate_word
-    wordlist = File.open('lib/5desk.txt', 'r')
     valid_word = false
     while valid_word == false
+      wordlist = File.open('lib/5desk.txt', 'r')
       random_num = rand(wordlist.readlines.size)
       @solution_word = File.readlines(wordlist)[random_num].strip.upcase
       valid_word = true if (5..12).to_a.include?(@solution_word.length)
     end
     wordlist.close
-    puts @solution_word
     @solution_word.length.times { @guess_array.push('_ ') }
     @solution_array = @solution_word.split('')
   end
