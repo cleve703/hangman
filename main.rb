@@ -19,6 +19,7 @@ class Hangman
 
   def initialize
     @guess_array = []
+    @all_guesses = []
     @letters = ('A'..'Z').to_a
     @misses = 0
     play_game
@@ -83,18 +84,25 @@ class Hangman
   end
 
   def game_sequence
-    if @misses == 6
-      print 'You lost! Press [ENTER] to play again or [X] to exit.'
-      replay_question
-    end
     while @misses < 6
       scoreboard
       get_guess
-      next unless @guess_array == @solution_array
+      evaluate_game
+    end
+  end
 
+  def evaluate_game
+    if @misses == 6
+      print %q(
+      You lost! Press [ENTER] to play again or [X] to exit.
+      )
+      replay_question
+    elsif @guess_array == @solution_array
       scoreboard
       @misses = 6
-      print 'You won! Press [ENTER] to play again or [X] to exit.'
+      print %q(
+      You won! Press [ENTER] to play again or [X] to exit.
+      )
       replay_question
     end
   end
@@ -121,16 +129,16 @@ class Hangman
       save_game
     elsif guess.length != 1
       puts %(
-        You may only guess one character at a time.  Try again.
+      You may only guess one character at a time.  Try again.
         )
       get_guess
-    elsif @guess_array.include?(guess)
+    elsif @all_guesses.include?(guess)
       puts %(
-        You have already guessed that letter.  Try again.
+      You have already guessed that letter.  Try again.
         )
     elsif !@letters.include?(guess)
       puts %(
-        You can only enter a letter.  Try again.
+      You can only enter a letter.  Try again.
         )
     else
       process_guess(guess)
@@ -138,6 +146,7 @@ class Hangman
     end
 
   def process_guess(guess)
+    @all_guesses.push(guess)
     if @solution_array.include?(guess)
       @solution_array.each_with_index do |letter, index|
         @guess_array[index] = guess if letter == guess
@@ -175,8 +184,12 @@ class Hangman
     game_data[:guess_array] = @guess_array
     game_data[:letters] = @letters
     game_data[:solution_array] = @solution_array
-    puts game_data
+    game_data[:all_guesses] = @all_guesses
     File.open("./yaml/#{default_filename}.yml", 'w') { |f| f.write(game_data.to_yaml) }
+    puts %Q(
+      File was saved as #{default_filename}.
+    )
+    Hangman.new
   end
 
   def saved_games_menu
@@ -191,13 +204,14 @@ class Hangman
       value = value.sub('.yml', '')
       saved_games_readable.push("#{key}: #{value}")
     end
+    saved_games_readable = saved_games_readable.join("\n      ")
     print %(
-            Select the number corresponding to your saved game
-            from the list below:
+      Select the number corresponding to your saved game
+      from the list below:
 
-            #{saved_games_readable}
+      #{saved_games_readable}
 
-            Enter a number: )
+      Enter a number: )
     selected_game = gets.chomp.to_i
     selected_game = saved_games_hash.values_at(selected_game)
     load_game(selected_game)
@@ -211,6 +225,7 @@ class Hangman
     @guess_array = game_data.values_at(:guess_array).flatten
     @letters = game_data.values_at(:letters).flatten
     @solution_array = @solution_word.split('')
+    @all_guesses = game_data.values_at(:all_guesses).flatten
     game_sequence
   end
 
