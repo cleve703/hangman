@@ -94,16 +94,18 @@ class Hangman
   def evaluate_game
     if @misses == 6
       print %q(
-      You lost! Press [ENTER] to play again or [X] to exit.
+      You lost! Press [ENTER]
       )
-      replay_question
+      gets.chomp
+      Hangman.new
     elsif @guess_array == @solution_array
       scoreboard
       @misses = 6
       print %q(
-      You won! Press [ENTER] to play again or [X] to exit.
+      You won! Press [ENTER]
       )
-      replay_question
+      gets.chomp
+      Hangman.new
     end
   end
 
@@ -170,11 +172,6 @@ class Hangman
     end
    end
 
-  def replay_question
-    play_again = gets.chomp.upcase
-    Hangman.new if play_again == ''
-  end
-
   def save_game
     time = Time.new
     default_filename = time.strftime('%Y%m%d%H%m%S')
@@ -188,7 +185,9 @@ class Hangman
     File.open("./yaml/#{default_filename}.yml", 'w') { |f| f.write(game_data.to_yaml) }
     puts %Q(
       File was saved as #{default_filename}.
+      Press [ENTER]
     )
+    gets.chomp
     Hangman.new
   end
 
